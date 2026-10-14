@@ -45,13 +45,13 @@ jobs:
       - name: Push image
         run: docker push $IMAGE_NAME:latest
 
-    deploy:
+  deploy:
     needs: image
     runs-on: self-hosted
     steps:
       - name: Pull and run image
+        shell: cmd
         run: |
-          docker rm -f demo
-          $global:LASTEXITCODE = 0
+          docker rm -f demo 2>nul
           docker pull ghcr.io/mshahbaz01/pipeline-test:latest
           docker run -d -p 3000:3000 --name demo ghcr.io/mshahbaz01/pipeline-test:latest

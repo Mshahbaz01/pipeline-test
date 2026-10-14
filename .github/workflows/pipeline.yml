@@ -1,0 +1,60 @@
+name: CI-CD Pipeline
+
+on:
+  push:
+    branches: [main]
+
+env:
+  IMAGE_NAME: ghcr.io/mshahbaz01/pipeline-test
+
+jobs:
+  build-and-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+      - run: npm run build
+
+      - name: Security scan (filesystem)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          severity: CRITICAL,HIGH
+          exit-code: 1
+
+  image:
+    needs: build-and-scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build image
+        run: docker build -t $IMAGE_NAME:latest .
+
+      - name: Push image
+        run: docker push $IMAGE_NAME:latest
+
+  deploy:
+    needs: image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pull and run image
+        run: |
+          docker pull ghcr.io/mshahbaz01/pipeline-test:latest
+          docker run -d -p 3000:3000 --name demo ghcr.io/mshahbaz01/pipeline-test:latest
+          sleep 5
+          curl http://localhost:3000

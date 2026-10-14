@@ -45,15 +45,10 @@ jobs:
       - name: Push image
         run: docker push $IMAGE_NAME:latest
 
-  deploy:
+    deploy:
     needs: image
     runs-on: self-hosted
-    permissions:
-      packages: read
     steps:
-      - name: Login to registry
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
       - name: Pull and run image
         run: |
           docker rm -f demo

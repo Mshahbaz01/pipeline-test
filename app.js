@@ -1,4 +1,4 @@
 const http = require('http');
 http.createServer((req, res) => {
-  res.end('Hello This is autmated message from shahbaz!');
+  res.end('Hello This is automated message from shahbaz!');
 }).listen(3000);
